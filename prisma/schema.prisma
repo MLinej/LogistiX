@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Vehicle {
+  id             Int           @id @default(autoincrement())
+  vehicle_number String        @unique @db.VarChar(20)
+  model          String?       @db.VarChar(50)
+  capacity_kg    Int
+  status         VehicleStatus @default(Available)
+  odometer       Int           @default(0)
+  last_service_km Int          @default(0)
+  state_code     String?       @db.Char(2)
+  rto_code       String?       @db.Char(2)
+  created_at     DateTime      @default(now())
+
+  trips        Trip[]
+  fuel_logs    FuelLog[]
+  maintenance  Maintenance[]
+  alerts       Alert[]
+
+  @@map("vehicles")
+}
+
+model Driver {
+  id              Int          @id @default(autoincrement())
+  name            String       @db.VarChar(50)
+  license_number  String?      @unique @db.VarChar(16)
+  license_expiry  DateTime?    @db.Date
+  safety_score    Int          @default(80)
+  status          DriverStatus @default(Available)
+  created_at      DateTime     @default(now())
+
+  trips   Trip[]
+  alerts  Alert[]
+
+  @@map("drivers")
+}
+
+model Trip {
+  id             Int        @id @default(autoincrement())
+  vehicle_id     Int
+  driver_id      Int
+  load_weight    Int
+  start_location String     @db.VarChar(100)
+  end_location   String     @db.VarChar(100)
+  status         TripStatus @default(Dispatched)
+  start_km       Int?
+  end_km         Int?
+  trip_dist      Int?       // will be a GENERATED column in DB — Prisma reads it as optional Int
+  created_at     DateTime   @default(now())
+  completed_at   DateTime?
+
+  vehicle  Vehicle  @relation(fields: [vehicle_id], references: [id])
+  driver   Driver   @relation(fields: [driver_id], references: [id])
+  fuel_logs FuelLog[]
+
+  @@map("trips")
+}
+
+model FuelLog {
+  id           Int      @id @default(autoincrement())
+  vehicle_id   Int
+  trip_id      Int?
+  distance_km  Int
+  fuel_liters  Float
+  efficiency   Float?   // GENERATED column in DB
+  anomaly      Boolean? // GENERATED column in DB
+  created_at   DateTime @default(now())
+
+  vehicle  Vehicle @relation(fields: [vehicle_id], references: [id])
+  trip     Trip?   @relation(fields: [trip_id], references: [id])
+
+  @@map("fuel_logs")
+}
+
+model Maintenance {
+  id                  Int      @id @default(autoincrement())
+  vehicle_id          Int
+  service_type        String   @db.VarChar(50)
+  cost                Int      @default(0)
+  service_km          Int
+  next_service_due_km Int
+  created_at          DateTime @default(now())
+
+  vehicle Vehicle @relation(fields: [vehicle_id], references: [id])
+
+  @@map("maintenance")
+}
+
+model Alert {
+  id         Int         @id @default(autoincrement())
+  vehicle_id Int?
+  driver_id  Int?
+  type       String      @db.VarChar(50)
+  message    String?
+  status     AlertStatus @default(Active)
+  created_at DateTime    @default(now())
+
+  vehicle Vehicle? @relation(fields: [vehicle_id], references: [id])
+  driver  Driver?  @relation(fields: [driver_id], references: [id])
+
+  @@map("alerts")
+}
+
+enum VehicleStatus {
+  Available
+  On_Trip   @map("On Trip")
+  In_Shop   @map("In Shop")
+  Retired
+}
+
+enum DriverStatus {
+  Available
+  On_Trip  @map("On Trip")
+  Off_Duty @map("Off Duty")
+  Suspended
+}
+
+enum TripStatus {
+  Dispatched
+  Cancelled
+  Delivered
+  Packed
+}
+
+enum AlertStatus {
+  Active
+  Resolved
+  Dismissed
+}
