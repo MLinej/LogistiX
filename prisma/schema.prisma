@@ -7,36 +7,34 @@ datasource db {
 }
 
 model Vehicle {
-  id             Int           @id @default(autoincrement())
-  vehicle_number String        @unique @db.VarChar(20)
-  model          String?       @db.VarChar(50)
-  capacity_kg    Int
-  status         VehicleStatus @default(Available)
-  odometer       Int           @default(0)
-  last_service_km Int          @default(0)
-  state_code     String?       @db.Char(2)
-  rto_code       String?       @db.Char(2)
-  created_at     DateTime      @default(now())
-
-  trips        Trip[]
-  fuel_logs    FuelLog[]
-  maintenance  Maintenance[]
-  alerts       Alert[]
+  id              Int           @id @default(autoincrement())
+  vehicle_number  String        @unique @db.VarChar(20)
+  model           String?       @db.VarChar(50)
+  capacity_kg     Int
+  status          VehicleStatus @default(Available)
+  odometer        Int           @default(0)
+  last_service_km Int           @default(0)
+  state_code      String?       @db.Char(2)
+  rto_code        String?       @db.Char(2)
+  created_at      DateTime      @default(now())
+  alerts          Alert[]
+  fuel_logs       FuelLog[]
+  maintenance     Maintenance[]
+  trips           Trip[]
 
   @@map("vehicles")
 }
 
 model Driver {
-  id              Int          @id @default(autoincrement())
-  name            String       @db.VarChar(50)
-  license_number  String?      @unique @db.VarChar(16)
-  license_expiry  DateTime?    @db.Date
-  safety_score    Int          @default(80)
-  status          DriverStatus @default(Available)
-  created_at      DateTime     @default(now())
-
-  trips   Trip[]
-  alerts  Alert[]
+  id             Int          @id @default(autoincrement())
+  name           String       @db.VarChar(50)
+  license_number String?      @unique @db.VarChar(16)
+  license_expiry DateTime?    @db.Date
+  safety_score   Int          @default(80)
+  status         DriverStatus @default(Available)
+  created_at     DateTime     @default(now())
+  alerts         Alert[]
+  trips          Trip[]
 
   @@map("drivers")
 }
@@ -51,29 +49,27 @@ model Trip {
   status         TripStatus @default(Dispatched)
   start_km       Int?
   end_km         Int?
-  trip_dist      Int?       // will be a GENERATED column in DB — Prisma reads it as optional Int
+  trip_dist      Int?
   created_at     DateTime   @default(now())
   completed_at   DateTime?
-
-  vehicle  Vehicle  @relation(fields: [vehicle_id], references: [id])
-  driver   Driver   @relation(fields: [driver_id], references: [id])
-  fuel_logs FuelLog[]
+  fuel_logs      FuelLog[]
+  driver         Driver     @relation(fields: [driver_id], references: [id])
+  vehicle        Vehicle    @relation(fields: [vehicle_id], references: [id])
 
   @@map("trips")
 }
 
 model FuelLog {
-  id           Int      @id @default(autoincrement())
-  vehicle_id   Int
-  trip_id      Int?
-  distance_km  Int
-  fuel_liters  Float
-  efficiency   Float?   // GENERATED column in DB
-  anomaly      Boolean? // GENERATED column in DB
-  created_at   DateTime @default(now())
-
-  vehicle  Vehicle @relation(fields: [vehicle_id], references: [id])
-  trip     Trip?   @relation(fields: [trip_id], references: [id])
+  id          Int      @id @default(autoincrement())
+  vehicle_id  Int
+  trip_id     Int?
+  distance_km Int
+  fuel_liters Float
+  efficiency  Float?
+  anomaly     Boolean?
+  created_at  DateTime @default(now())
+  trip        Trip?    @relation(fields: [trip_id], references: [id])
+  vehicle     Vehicle  @relation(fields: [vehicle_id], references: [id])
 
   @@map("fuel_logs")
 }
@@ -86,8 +82,7 @@ model Maintenance {
   service_km          Int
   next_service_due_km Int
   created_at          DateTime @default(now())
-
-  vehicle Vehicle @relation(fields: [vehicle_id], references: [id])
+  vehicle             Vehicle  @relation(fields: [vehicle_id], references: [id])
 
   @@map("maintenance")
 }
@@ -100,11 +95,21 @@ model Alert {
   message    String?
   status     AlertStatus @default(Active)
   created_at DateTime    @default(now())
-
-  vehicle Vehicle? @relation(fields: [vehicle_id], references: [id])
-  driver  Driver?  @relation(fields: [driver_id], references: [id])
+  driver     Driver?     @relation(fields: [driver_id], references: [id])
+  vehicle    Vehicle?    @relation(fields: [vehicle_id], references: [id])
 
   @@map("alerts")
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  name          String    @db.VarChar(100)
+  email         String    @unique @db.VarChar(100)
+  password_hash String    @db.VarChar(255)
+  role          UserRole  @default(dispatcher)
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+
+  @@map("users")
 }
 
 enum VehicleStatus {
@@ -116,8 +121,8 @@ enum VehicleStatus {
 
 enum DriverStatus {
   Available
-  On_Trip  @map("On Trip")
-  Off_Duty @map("Off Duty")
+  On_Trip   @map("On Trip")
+  Off_Duty  @map("Off Duty")
   Suspended
 }
 
@@ -134,17 +139,9 @@ enum AlertStatus {
   Dismissed
 }
 
-model User {
-  id         Int      @id @default(autoincrement())
-  email      String   @unique @db.VarChar(100)
-  password   String   @db.VarChar(255)
-  role       UserRole @default(driver)
-  created_at DateTime @default(now())
-
-  @@map("users")
-}
-
 enum UserRole {
-  admin
-  driver
+  manager
+  dispatcher
+  safety_officer
+  finance
 }

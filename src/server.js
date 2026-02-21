@@ -1,31 +1,33 @@
-import express from "express";
-import cors from "cors";
-import prisma from "./config/db.js";
-import authRoutes from "./routes/auth.routes.js";
-import vehicleRoutes from "./routes/vehicle.routes.js";
-import driverRoutes from "./routes/driver.routes.js";
-import tripRoutes from "./routes/trip.routes.js";
-import fuelLogRoutes from "./routes/fuellog.routes.js";
+import express       from "express";
+import cors          from "cors";
+import dotenv        from "dotenv";
+import prisma        from "./config/db.js";
+import vehicleRoutes     from "./routes/vehicle.routes.js";
+import driverRoutes      from "./routes/driver.routes.js";
+import tripRoutes        from "./routes/trip.routes.js";
+import fuelLogRoutes     from "./routes/fuellog.routes.js";
 import maintenanceRoutes from "./routes/maintenance.routes.js";
-import alertRoutes from "./routes/alert.routes.js";
-import { authenticate, authorizeAdmin } from "./middleware/auth.middleware.js";
+import alertRoutes       from "./routes/alert.routes.js";
+import userRoutes        from "./routes/user.routes.js";
 
-const app = express();
+dotenv.config();
+
+const app  = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors({
+  origin: ["http://localhost:3001", "http://localhost:3000"],
+  credentials: true,
+}));
 app.use(express.json());
 
-// Public routes
-app.use("/api/auth", authRoutes);
-
-// Protected routes
-app.use("/api/vehicles", authenticate, vehicleRoutes);
-app.use("/api/drivers", authenticate, driverRoutes);  // ← fixed bug here
-app.use("/api/trips", authenticate, tripRoutes);
-app.use("/api/fuellogs", authenticate, fuelLogRoutes);
-app.use("/api/maintenance", authenticate, authorizeAdmin, maintenanceRoutes);
-app.use("/api/alerts", authenticate, alertRoutes);
+app.use("/api/users",       userRoutes);
+app.use("/api/vehicles",    vehicleRoutes);
+app.use("/api/drivers",     driverRoutes);
+app.use("/api/trips",       tripRoutes);
+app.use("/api/fuellogs",    fuelLogRoutes);
+app.use("/api/maintenance", maintenanceRoutes);
+app.use("/api/alerts",      alertRoutes);
 
 app.get("/health", async (req, res) => {
   try {
@@ -36,6 +38,11 @@ app.get("/health", async (req, res) => {
   }
 });
 
+app.use((err, req, res, next) => {
+  console.error("Error:", err.message);
+  res.status(err.status || 500).json({ error: err.message });
+});
+
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`LogistiX backend running on port ${PORT}`);
 });
