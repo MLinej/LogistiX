@@ -1,3 +1,48 @@
+
+## 💡 What is LogistiX?
+
+LogistiX is a **full-stack fleet management web application** that digitizes and automates the end-to-end lifecycle of a logistics operation:
+
+| Area | What LogistiX Does |
+|---|---|
+| 🚛 Vehicle Management | Track registration, capacity, odometer, service history, and live status |
+| 👤 Driver Management | Manage licenses, safety scores, availability, and compliance |
+| 📦 Trip Dispatching | Assign vehicles and drivers to trips with automated validation |
+| ⛽ Fuel Monitoring | Log fuel usage, auto-calculate efficiency, flag anomalies |
+| 🔧 Maintenance Tracking | Schedule services and auto-mark vehicles as "In Shop" |
+| 🔔 Smart Alerts | Auto-generate alerts for license expiry, overload, and anomalies |
+| 📊 Analytics Dashboard | Visual charts for fleet utilization, fuel efficiency, and trip history |
+
+---
+
+## ✨ Key Features
+
+### ⚡ Automated Business Logic (Database Triggers)
+- **Auto-alert** when a driver's license is expiring within 60 days
+- **Auto-set** vehicle status to `In Shop` when a maintenance record is logged
+- **Auto-sync** vehicle and driver status (`On Trip` / `Available`) when trip status changes
+- **Block dispatch** if cargo weight exceeds vehicle capacity
+- **Block dispatch** if the driver's license is expired
+
+### 🛡️ Robust Data Validation
+- Indian driving license format enforced via regex (`AA9999999999999`)
+- Vehicle registration state code (`[A-Z]{2}`) and RTO code (`[0-9]{2}`) validated
+- Odometer and service km cross-validated (service km ≤ odometer)
+- Trip locations enforced to be distinct (case-insensitive)
+- Fuel efficiency and anomaly flags **auto-generated** as stored computed columns
+
+### 🔐 Secure Authentication
+- JWT-based auth with `jsonwebtoken`
+- Passwords hashed with `bcryptjs`
+- Protected routes via Express middleware
+
+### 📱 Modern UI/UX
+- Built with **shadcn/ui** + **Radix UI** for accessible, polished components
+- Dark/light mode via `next-themes`
+- Responsive layouts with **Tailwind CSS v4**
+- Analytics charts with **Recharts**
+- Toast notifications with **Sonner**
+
 Contributors :
 Nirbhay71
 MLinej
