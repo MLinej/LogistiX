@@ -133,3 +133,18 @@ enum AlertStatus {
   Resolved
   Dismissed
 }
+
+model User {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique @db.VarChar(100)
+  password   String   @db.VarChar(255)
+  role       UserRole @default(driver)
+  created_at DateTime @default(now())
+
+  @@map("users")
+}
+
+enum UserRole {
+  admin
+  driver
+}
